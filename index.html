@@ -61,6 +61,22 @@ select{font:inherit;width:100%;padding:10px 12px;border-radius:10px;border:1px s
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 .chips button{width:auto;padding:8px 16px}
 .role.tc{color:var(--ok)}.role.ti{color:var(--ink)}
+.gh{font-size:.85rem;color:var(--mute);font-weight:600;margin:12px 0 2px}
+.rl{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.rs{display:flex;align-items:center;gap:10px}
+.rs button{width:38px;padding:4px;font-size:1.2rem}
+.rs b{min-width:26px;text-align:center}
+.tot{display:flex;justify-content:space-between;font-weight:800;margin:12px 0}
+.team{font-size:1.9rem;font-weight:800;margin:4px 0 14px;color:var(--acc)}
+.team.tc{color:var(--ok)}.team.ti{color:var(--ink)}
+.nmi{font:inherit;width:100%;border:0;border-bottom:1px dashed var(--line);background:transparent;color:inherit;padding:6px 0;margin:0;border-radius:0}
+.pl>div:first-child{flex:1;min-width:0;margin-inline-end:10px}
+#tm{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(0,0,0,.08);padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));z-index:50}
+.tmi{max-width:560px;margin:0 auto}
+.tmr{display:flex;gap:8px}
+.tmr button{flex:1;padding:8px 4px;margin:0}
+.tt{font-size:2.6rem;font-weight:800;text-align:center;line-height:1.3;margin:2px 0 4px}
+.tt.lo{color:var(--acc)}
 </style>
 <script>
 (function(){
@@ -84,16 +100,19 @@ fetch(U).then(function(r){return r.text()}).then(async function(css){
 </head>
 <body>
 <main id="app"></main>
+<div id="tm" style="display:none"><div class="tmi">
+<div class="tmr"><button id="tm-sp" class="on">زمان صحبت</button><button id="tm-ch" class="ghost">زمان چالش</button></div>
+<div class="tt" id="tt">۱:۰۰</div>
+<div class="tmr"><button class="ghost" id="tm-m">−۱۰</button><button id="tm-go" style="flex:2">شروع</button><button class="ghost" id="tm-p">+۱۰</button><button class="ghost" id="tm-rs">ریست</button></div>
+</div></div>
 <script>
 const fa=n=>Number(n).toLocaleString('fa-IR');
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const DEF='توانایی این نقش را گرداننده طبق قوانین سناریو توضیح می‌دهد.';
 const D={
-'رییس مافیا':'رهبر مافیا و تصمیم‌گیرنده‌ی شات شب. استعلام کارآگاه برای او معمولاً منفی است.',
-'پدرخوانده':'رهبر مافیا و تصمیم‌گیرنده‌ی شات شب.',
+'پدرخوانده':'رهبر مافیا و تصمیم‌گیرنده‌ی شات شب. استعلام کارآگاه برای او معمولاً منفی است.',
 'دون مافیا':'رهبر مافیا و تصمیم‌گیرنده‌ی شات شب.',
-'آل کاپن':'همان نقش رییس مافیا (بدون جلیقه).',
-'دکتر لکتر':'هر شب می‌تواند یک مافیای حذف‌شده را نجات دهد.',
+'آل کاپن':'همان نقش پدرخوانده (بدون جلیقه).',
 'ناتو':'طبق سناریو: حدس نقش یک بازیکن، یا خنثی کردن توانایی او.',
 'مافیای ساده':'با مافیا مشورت می‌کند و در شب قربانی را انتخاب می‌کنند.',
 'شهروند':'نقش ویژه ندارد؛ با استدلال مافیا را پیدا می‌کند.',
@@ -135,55 +154,87 @@ const D={
 'مشتری':'با گرفتن اسلحه ساید می‌گیرد.'};
 const X=(r,t,k)=>Array(k).fill([r,t]);
 const mk=(g,n,s,M,C,I,o)=>Object.assign({g,n,s,M,C,I:I||[]},o||{});
-const BC=['کارآگاه','پزشک'],F=['دکتر واتسون','همشهری کین','لئون حرفه‌ای','کنستانتین'],FM=['پدرخوانده','ساول گودمن','ماتادور'];
-const NR=['رییس مافیا','ناتاشا','ناتو','خرابکار','تروریست'],NC=['کارآگاه','پزشک','اسنایپر','رویین‌تن','فراماسون','کشیش','تفنگدار','کابوی','قاضی','فرمانده'];
+const BC=['کارآگاه','پزشک'],F=['پزشک','همشهری کین','لئون حرفه‌ای','کنستانتین'],FM=['پدرخوانده','ساول گودمن','ماتادور'];
+const NR=['پدرخوانده','ناتاشا','ناتو','خرابکار','تروریست'],NC=['کارآگاه','پزشک','اسنایپر','رویین‌تن','فراماسون','کشیش','تفنگدار','کابوی','قاضی','فرمانده'];
 const P=[6,7,8,9,10,12];
 const SCL=[
-mk('مقدماتی','هیلر کیلر',P,['رییس مافیا'],BC),
-mk('مقدماتی','شهروند خائن',P,['رییس مافیا'],[...BC,'شهروند خائن'],0,{note:'شهروند خائن اگر شات شود و پزشک نجاتش ندهد، به مافیا می‌پیوندد.'}),
+mk('مقدماتی','هیلر کیلر',P,['پدرخوانده'],BC),
+mk('مقدماتی','شهروند خائن',P,['پدرخوانده'],[...BC,'شهروند خائن'],0,{note:'شهروند خائن اگر شات شود و پزشک نجاتش ندهد، به مافیا می‌پیوندد.'}),
 mk('مقدماتی','مافیا روسی',[7,8,9,10,12,13,15],[],[],0,{note:'روز معارفه و شات شب ندارد؛ حذف فقط با رای روز است. بدون گرداننده هم اجرا می‌شود.'}),
-mk('کلاسیک پیشرفته','مذاکره‌کننده (شبکه سلامت)',[9,10,12,13],['رییس مافیا','مذاکره‌کننده'],[...BC,'اسنایپر','زره‌پوش','خبرنگار']),
-mk('کلاسیک پیشرفته','تکاور (ناتو)',[10,12,13,15],['رییس مافیا','ناتو','گروگانگیر'],[...BC,'تکاور','نگهبان','تفنگدار'],0,{note:'در شبی که ناتویی انجام شود مافیا شات ندارد و ناتویی با تأیید رییس مافیاست.'}),
+mk('کلاسیک پیشرفته','مذاکره‌کننده (شبکه سلامت)',[9,10,12,13],['پدرخوانده','مذاکره‌کننده'],[...BC,'اسنایپر','زره‌پوش','خبرنگار']),
+mk('کلاسیک پیشرفته','تکاور (ناتو)',[10,12,13,15],['پدرخوانده','ناتو','گروگانگیر'],[...BC,'تکاور','نگهبان','تفنگدار'],0,{note:'در شبی که ناتویی انجام شود مافیا شات ندارد و ناتویی با تأیید پدرخواندهست.'}),
 mk('کلاسیک پیشرفته','ناتاشا',[9,10,12,13,15],NR,NC),
-mk('کلاسیک پیشرفته','مذاکره‌کننده پیشرفته',[9,10,12,13,15],['رییس مافیا','مذاکره‌کننده','ناتو','خرابکار','تروریست'],['کارآگاه','پزشک','اسنایپر','رویین‌تن','خبرنگار','تفنگدار','کابوی','قاضی','فرمانده']),
-mk('کلاسیک پیشرفته','روانی',[9,10],['رییس مافیا','روانی','خرابکار'],['پزشک','روانشناس','تفنگدار'],0,{note:'هر بار تفنگ جنگی در روز شلیک شود، ساید بازیکن اعلام می‌شود.'}),
-mk('کلاسیک پیشرفته','کیلر',[13,14,15,16,17],['رییس مافیا','کارآگاه خصوصی','ناتو','جراح','تروریست'],['کارآگاه','پزشک','اسنایپر','رویین‌تن','فراماسون','ردگیر','تفنگدار','کابوی','آهنگر','قاضی','فرمانده'],['کیلر']),
-mk('کلاسیک پیشرفته','جوکر',[12,13,15],['رییس مافیا','ناتاشا','ناتو','تروریست'],['کارآگاه','پزشک','اسنایپر','رویین‌تن','کشیش','فراماسون','تفنگدار','کابوی','قاضی','فرمانده'],['جوکر']),
-mk('کلاسیک پیشرفته','گمبلر',[18,23],['رییس مافیا','کارآگاه خصوصی','ناتو','جراح','تروریست'],['عینک‌ساز','پزشک','روانشناس','رویین‌تن','فراماسون','ردگیر','تفنگدار','کابوی','آهنگر','عنکبوت','قاضی'],['گمبلر','کیلر']),
+mk('کلاسیک پیشرفته','مذاکره‌کننده پیشرفته',[9,10,12,13,15],['پدرخوانده','مذاکره‌کننده','ناتو','خرابکار','تروریست'],['کارآگاه','پزشک','اسنایپر','رویین‌تن','خبرنگار','تفنگدار','کابوی','قاضی','فرمانده']),
+mk('کلاسیک پیشرفته','روانی',[9,10],['پدرخوانده','روانی','خرابکار'],['پزشک','روانشناس','تفنگدار'],0,{note:'هر بار تفنگ جنگی در روز شلیک شود، ساید بازیکن اعلام می‌شود.'}),
+mk('کلاسیک پیشرفته','کیلر',[13,14,15,16,17],['پدرخوانده','کارآگاه خصوصی','ناتو','جراح','تروریست'],['کارآگاه','پزشک','اسنایپر','رویین‌تن','فراماسون','ردگیر','تفنگدار','کابوی','آهنگر','قاضی','فرمانده'],['کیلر']),
+mk('کلاسیک پیشرفته','جوکر',[12,13,15],['پدرخوانده','ناتاشا','ناتو','تروریست'],['کارآگاه','پزشک','اسنایپر','رویین‌تن','کشیش','فراماسون','تفنگدار','کابوی','قاضی','فرمانده'],['جوکر']),
+mk('کلاسیک پیشرفته','گمبلر',[18,23],['پدرخوانده','کارآگاه خصوصی','ناتو','جراح','تروریست'],['عینک‌ساز','پزشک','روانشناس','رویین‌تن','فراماسون','ردگیر','تفنگدار','کابوی','آهنگر','عنکبوت','قاضی'],['گمبلر','کیلر']),
 mk('کلاسیک پیشرفته','وسترن',[6,7,8,9,10],['شاهکش','تروریست'],['کابوی','اسنایپر','تفنگدار','فراماسون','زره‌پوش'],0,{note:'مافیا تا روز سوم شات ندارد و رای‌گیری هم نیست؛ خروج فقط با توانایی نقش‌هاست.'}),
 mk('کلاسیک پیشرفته','قمارباز',[6,8,11,13],['قمارباز','معشوقه','جاسوس','شاهکش','تروریست'],['روانشناس','عینک‌ساز','آهنگر','عنکبوت','فراماسون','کابوی'],0,{x:1,note:'مثل وسترن (بدون شات تا روز سوم) و یک مافیای بیشتر از حالت عادی.'}),
-mk('شب‌های مافیا و پدرخوانده','شب‌های مافیا (فصل‌های ابتدایی)',[7,8,9,10,12],['پدرخوانده','دکتر لکتر'],['کارآگاه','پزشک','حرفه‌ای','جان سخت','شهردار','روانپزشک'],0,{note:'مافیا از ابتدا یکدیگر را می‌شناسند. بعد از خروج هر بازیکن، یک کارت حرکت آخر انتخاب می‌شود.'}),
-mk('شب‌های مافیا و پدرخوانده','شب‌های مافیا (فصل‌های فینال)',[9,10,12,13],['پدرخوانده','دکتر لکتر','جوکر'],['کارآگاه','پزشک','حرفه‌ای','جان سخت','شهردار','روانپزشک','فروشنده','خوابگرد'],0,{note:'مافیا از ابتدا یکدیگر را می‌شناسند. بعد از خروج هر بازیکن، یک کارت حرکت آخر انتخاب می‌شود.'}),
-mk('شب‌های مافیا و پدرخوانده','شب مافیا (معشوقه)',[9,10,11,12,13,14,15,16,17,18],['رییس مافیا','معشوقه','شاهکش','جلب','جراح','شارلاتان'],['کارآگاه','پزشک','شهردار','کلانتر','قاضی','دست‌کج','گورکن','گردن‌کلفت','دندان‌پزشک'],0,{note:'مافیا از ابتدا یکدیگر را می‌شناسند و رای‌گیری مرحله‌ی دوم مخفی است.'}),
-mk('شب‌های مافیا و پدرخوانده','گادفادر شو',[7,8,9,10,12],['پدرخوانده','دکتر لکتر','ناتو'],['ساقی','کارآگاه','پزشک','اسنایپر','جان سخت'],0,{note:'ساقی توانایی بازیکن انتخاب‌شده را مختل می‌کند. ناتو او را شهروند ساده می‌کند (خارج نمی‌کند).'}),
+mk('شب‌های مافیا و پدرخوانده','شب‌های مافیا (فصل‌های ابتدایی)',[7,8,9,10,12],['پدرخوانده'],['کارآگاه','پزشک','حرفه‌ای','جان سخت','شهردار'],0,{note:'مافیا از ابتدا یکدیگر را می‌شناسند. بعد از خروج هر بازیکن، یک کارت حرکت آخر انتخاب می‌شود.'}),
+mk('شب‌های مافیا و پدرخوانده','شب‌های مافیا (فصل‌های فینال)',[9,10,12,13],['پدرخوانده','جوکر'],['کارآگاه','پزشک','حرفه‌ای','جان سخت','شهردار','فروشنده','خوابگرد'],0,{note:'مافیا از ابتدا یکدیگر را می‌شناسند. بعد از خروج هر بازیکن، یک کارت حرکت آخر انتخاب می‌شود.'}),
+mk('شب‌های مافیا و پدرخوانده','شب مافیا (معشوقه)',[9,10,11,12,13,14,15,16,17,18],['پدرخوانده','معشوقه','شاهکش','جلب','جراح','شارلاتان'],['کارآگاه','پزشک','شهردار','کلانتر','قاضی','دست‌کج','گورکن','گردن‌کلفت'],0,{note:'مافیا از ابتدا یکدیگر را می‌شناسند و رای‌گیری مرحله‌ی دوم مخفی است.'}),
+mk('شب‌های مافیا و پدرخوانده','گادفادر شو',[7,8,9,10,12],['پدرخوانده','ناتو'],['ساقی','کارآگاه','پزشک','اسنایپر','جان سخت'],0,{note:'ساقی توانایی بازیکن انتخاب‌شده را مختل می‌کند. ناتو او را شهروند ساده می‌کند (خارج نمی‌کند).'}),
 mk('شب‌های مافیا و پدرخوانده','پدرخوانده ۱ (نوستراداموس)',[10,12,13],FM,F,['نوستراداموس']),
 mk('شب‌های مافیا و پدرخوانده','پدرخوانده ۲ (جک اسپارو)',[10,12,13],FM,F,['جک اسپارو']),
 mk('شب‌های مافیا و پدرخوانده','پدرخوانده ۳ (شرلوک هولمز)',[10,12,13],FM,F,['شرلوک هولمز']),
 mk('شب‌های مافیا و پدرخوانده','زودیاک',[12],['آل کاپن','بمب‌گذار','شعبده‌باز'],['کارآگاه','پزشک','محافظ','حرفه‌ای','تفنگدار','اوشن'],['زودیاک'],{note:'زودیاک زمانی برنده می‌شود که بازی به دو نفر نهایی برسد.'}),
-mk('شب‌های مافیا و پدرخوانده','میتیک',[12],['رییس مافیا','کانسورت','نینجا','تروریست'],['دیتکتیو','پزشک','بادیگارد','اسنایپر'],0,{note:'کلیم‌آزاد: اعلام یا بلوف نقش مجاز است. استعلام وضعیت و اعلام ساید ندارد.'}),
-mk('سایر','بازپرس (شبکه نسیم)',[10,12,13],['رییس مافیا','ناتو','شیاد'],[...BC,'محقق','بازپرس','رویین‌تن','اسنایپر']),
+mk('شب‌های مافیا و پدرخوانده','میتیک',[12],['پدرخوانده','کانسورت','نینجا','تروریست'],['دیتکتیو','پزشک','بادیگارد','اسنایپر'],0,{note:'کلیم‌آزاد: اعلام یا بلوف نقش مجاز است. استعلام وضعیت و اعلام ساید ندارد.'}),
+mk('سایر','بازپرس (شبکه نسیم)',[10,12,13],['پدرخوانده','ناتو','شیاد'],[...BC,'محقق','بازپرس','رویین‌تن','اسنایپر']),
 mk('سایر','نماینده (دن کلاب)',[10,12,13],['دون مافیا','هکر','یاغی','ناتو'],['راهنما','پزشک','مینگذار','محافظ','وکیل','سرباز'],0,{note:'هر روز دو نماینده با رای انتخاب می‌شوند و تارگت رای‌گیری را مشخص می‌کنند.'}),
-mk('سایر','ارتش سری',[12],[],[],0,{man:1,tn:{c:'گروه نجات',m:'گشتاپو',i:'بدون ساید'},note:'هدف: خلبان را زنده دستگیر کنید. پایان بازی را گرداننده اعلام می‌کند.',fix:[].concat(X('خلبان','c',1),X('کرتیس','c',1),X('دکتر پاسکال','c',1),X('مامور نجات','c',3),X('سرهنگ کسلر','m',1),X('راینهارت','m',1),X('گشتاپو ساده','m',2),X('مشتری','i',2))}),
+mk('سایر','ارتش سری',[12],[],[],0,{man:1,tn:{c:'گروه نجات',m:'گشتاپو',i:'بدون ساید'},note:'هدف: خلبان را زنده دستگیر کنید. پایان بازی را گرداننده اعلام می‌کند.',fix:[].concat(X('خلبان','c',1),X('کرتیس','c',1),X('پزشک','c',1),X('مامور نجات','c',3),X('سرهنگ کسلر','m',1),X('راینهارت','m',1),X('گشتاپو ساده','m',2),X('مشتری','i',2))}),
 mk('سایر','ضد',[12],[],[],0,{man:1,tn:{c:'ضد جاسوس',m:'جاسوس',i:'بدون ساید'},note:'تیم‌ها همدیگر را نمی‌شناسند. اگر همه‌ی جاسوس‌ها زندانی شوند، جاسوس‌ها برنده‌اند. پایان بازی را گرداننده اعلام می‌کند.',fix:[].concat(X('سرگرد','c',1),X('مامور ضد','c',3),X('سر تیم جاسوس','m',1),X('جاسوس','m',3),X('توریست','i',2),X('گروگان','i',2))})
 ];
 const NO=['شهردار','پزشک','کارآگاه','اسنایپر','حرفه‌ای','جان سخت','روانشناس'];
 const LOGO='data:image/png;base64,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';
-let S={step:'setup',sc:0,n:10,names:[],players:[],i:0,shown:false,night:true,round:1,peek:false};
+const RT={};
+SCL.forEach(s=>{s.M.forEach(r=>RT[r]=RT[r]||'m');s.C.forEach(r=>RT[r]=RT[r]||'c');s.I.forEach(r=>RT[r]=RT[r]||'i');(s.fix||[]).forEach(x=>RT[x[0]]=RT[x[0]]||x[1])});
+RT['شهروند']='c';RT['مافیای ساده']='m';
+let S={step:'setup',sc:0,n:10,names:[],players:[],i:0,shown:false,night:true,round:1,peek:false,cust:null,all:false};
 const $=document.getElementById('app');
 const cur=()=>SCL[S.sc];
 const tn=t=>(cur().tn||{c:'شهروند',m:'مافیا',i:'مستقل'})[t];
-function comp(n){
+const roleDesc=r=>((cur().tut||{}).roles||{})[r]||D[r]||DEF;
+const addTut=(re,t)=>SCL.forEach(x=>{if(re.test(x.n))x.tut=t});
+function rnd(n){const c=window.crypto;if(!c||!c.getRandomValues)return Math.floor(Math.random()*n);const a=new Uint32Array(1),lim=Math.floor(4294967296/n)*n;do{c.getRandomValues(a)}while(a[0]>=lim);return a[0]%n}
+function shuffle(l){for(let j=l.length-1;j>0;j--){const r=rnd(j+1);[l[j],l[r]]=[l[r],l[j]]}return l}
+addTut(/فصل/,{flow:[
+['شب معارفه','در ابتدای بازی شب می‌شود و اعضای مافیا یکدیگر را می‌شناسند. بعد روز معارفه شروع می‌شود و بازیکنان می‌توانند از هم چالش بگیرند.'],
+['رای‌گیری اول','بعد از روز معارفه رای‌گیری شروع می‌شود و کسانی که به حدنصاب رای برسند، به دفاعیه می‌آیند.'],
+['رای‌گیری دوم (چند نفر در دفاع)','در خواب نیمروزی و مخفی انجام می‌شود و بعد از آن شهردار بیدار می‌شود. هر بازیکن فقط به یک نفر رای می‌دهد و کسانی که در دفاع هستند حق رای ندارند. هر کس بیشترین رای را بیاورد خارج می‌شود (حدنصاب مهم نیست).'],
+['رای‌گیری دوم (یک نفر در دفاع)','در روز و آشکار انجام می‌شود و شهردار بیدار نمی‌شود. برای خروج آن فرد حداقل نصف نفرات باید به او رای بدهند.'],
+['قرعه مرگ','اگر دو نفر بیشترین رای برابر را بیاورند، یکی از آن‌ها با قرعه خارج می‌شود.'],
+['کارت‌های حرکت آخر','بازیکنی که خارج می‌شود یک کارت انتخاب می‌کند. مسیر سبز: یک نفر آن روز متهم نمی‌شود. فرش قرمز: یک نفر حتماً به دفاعیه می‌رود. ذهن زیبا: حدس نقشی که اعلام نشده؛ اگر درست باشد به بازی برمی‌گردد. بی‌خوابی: مستقیم به روز بعد می‌رویم. سرگیجه: یک نفر برای یک روز و شب بی‌اثر می‌شود. شلیک نهایی: بعد از رای‌گیری دوم به‌جای مافیا شلیک شب را انجام می‌دهد و کامل خارج می‌شود.']
+],roles:{
+'پدرخوانده':'هر شب یک نفر را برای شات شب انتخاب می‌کند. اگر کارآگاه او را استعلام کند، جواب همیشه «شهروند» است.',
+'جوکر':'هر شب یک نفر را انتخاب می‌کند؛ اگر کارآگاه همان شب او را استعلام کند، جواب معکوس داده می‌شود. در حالت ۱۳ نفره هر نفر را فقط یک بار می‌تواند انتخاب کند.',
+'مافیای ساده':'شب همراه مافیا بیدار می‌شود و می‌تواند یک نفر را برای شات پیشنهاد بدهد؛ انتخاب نهایی با پدرخوانده است.',
+'کارآگاه':'هر شب استعلام یک نفر را می‌گیرد؛ اگر از مافیا باشد، مثبت اعلام می‌شود. استعلام پدرخوانده همیشه «شهروند» است.',
+'پزشک':'شب‌ها از شهروندان محافظت می‌کند. تعداد نفراتی که می‌تواند انتخاب کند به تعداد بازیکنان زنده بستگی دارد. اگر مافیا یکی از آن‌ها را شات کرده باشد، نجات پیدا می‌کند.',
+'حرفه\u200cای':'هر شب می‌تواند به یک مافیا شلیک کند؛ اما شلیک اشتباه به شهروند یعنی خروج خودش از بازی.',
+'جان سخت':'با شلیک اول مافیا کشته نمی‌شود و از آن بی‌خبر است. استعلام نفرات خارج‌شده با اوست و دو بار می‌تواند استعلام وضعیت بگیرد.',
+'شهردار':'فقط یک بار در کل بازی می‌تواند رای‌گیری دور دوم را لغو کند تا کسی خارج نشود، یا یکی از متهم‌ها را بدون رای‌گیری از بازی خارج کند.',
+'فروشنده':'یک نفر را در کل بازی انتخاب می‌کند و توانایی او تا آخر بازی از بین می‌رود. اگر جان‌سخت را انتخاب کند و جلیقه‌اش سالم باشد، فقط جلیقه از بین می‌رود و توانایی‌اش می‌ماند.',
+'خوابگرد':'یک شب می‌تواند خوابگردی کند. در آن شب مافیا بیدار نمی‌شود و فقط نقش‌های شهروندی بیدار می‌شوند؛ صبح بعد خوابگرد از بازی خارج می‌شود.',
+'شهروند':'توانایی ویژه ندارد و فقط در روز با استدلال به پیدا کردن مافیا کمک می‌کند.'
+}});
+function auto(n){
   const s=cur();if(s.fix)return s.fix.slice();
-  const ni=s.I.length,mc=Math.max(1,Math.floor(n/3)+(s.x||0)-ni),sp=n-mc-ni,k=Math.min(s.C.length,sp>=5?sp-1:sp),l=[];
+  const ni=s.I.length,mc=Math.max(1,Math.floor(n/3)+(s.x||0)-ni),sp=n-mc-ni,al=S.all&&s.C.length,k=al?sp:Math.min(s.C.length,sp>=5?sp-1:sp),l=[];
   for(let j=0;j<mc;j++)l.push([s.M[j]||'مافیای ساده','m']);
   s.I.forEach(r=>l.push([r,'i']));
-  for(let j=0;j<sp;j++)l.push([j<k?s.C[j]:'شهروند','c']);
+  for(let j=0;j<sp;j++)l.push([al?s.C[j%s.C.length]:(j<k?s.C[j]:'شهروند'),'c']);
   return l;
 }
+const agg=l=>{const m=new Map();l.forEach(([r,t])=>{const key=r+'|'+t;if(m.has(key))m.get(key).k++;else m.set(key,{r,t,k:1})});return[...m.values()]};
+function comp(n){return S.cust?S.cust.flatMap(x=>Array(x.k).fill([x.r,x.t])):auto(n)}
+const teamOf=r=>{const s=cur();return s.M.includes(r)?'m':s.I.includes(r)?'i':s.C.includes(r)?'c':((s.fix||[]).find(x=>x[0]===r)||[])[1]||RT[r]||'c'};
 function build(){
-  const l=comp(S.n);
-  for(let j=l.length-1;j>0;j--){const r=Math.floor(Math.random()*(j+1));[l[j],l[r]]=[l[r],l[j]]}
-  S.players=l.map((x,j)=>({name:(S.names[j]||'').trim()||'بازیکن '+fa(j+1),role:x[0],team:x[1],alive:true}));
+  const base=comp(S.n);let l,key,t=0,h=[];
+  try{h=JSON.parse(localStorage.getItem('mafia-deals')||'[]')}catch(e){}
+  do{l=shuffle(base.slice());key=l.map(x=>x[0]).join('|');t++}while(h.includes(key)&&t<500);
+  h.push(key);try{localStorage.setItem('mafia-deals',JSON.stringify(h.slice(-10)))}catch(e){}
+  S.players=l.map((x,j)=>({name:'بازیکن '+fa(j+1),role:x[0],team:x[1],alive:true}));
   S.i=0;S.shown=false;S.step='reveal';S.night=true;S.round=1;
 }
 function stat(){
@@ -206,27 +257,49 @@ function nightGuide(){
   if(S.round===1)h+=`<div class="step">شب اول: مافیا چشم باز می‌کنند و گرداننده آن‌ها را به هم معرفی می‌کند.</div>`;
   if(mf.length)h+=`<div class="step"><b>مافیا</b>: ${mf.map(p=>esc(p.name)+' ('+p.role+')').join('، ')}<small>مشورت بی‌صدا و انتخاب قربانی</small></div>`;
   al.filter(p=>p.team!=='m'&&p.role!=='شهروند'&&p.role!=='شهروند ساده').sort((a,b)=>ix(a)-ix(b)).forEach(p=>{
-    h+=`<div class="step"><b>${p.role}</b>: ${esc(p.name)}<small>${D[p.role]||DEF}</small></div>`});
+    h+=`<div class="step"><b>${p.role}</b>: ${esc(p.name)}<small>${roleDesc(p.role)}</small></div>`});
   return h||'<div class="step">برای این شب نقش بیدارشونده‌ای نیست.</div>';
 }
 function view(){
   const s=cur();
   if(S.step==='setup'){
-    const c={};comp(S.n).forEach(x=>c[x[0]]=(c[x[0]]||0)+1);
+    const rows=S.cust||agg(comp(S.n)),tot=rows.reduce((a,x)=>a+x.k,0);if(S.cust)S.n=tot;
+    const grp=['m','c','i'].map(t=>{const g=rows.map((x,i)=>({r:x.r,t:x.t,k:x.k,i})).filter(x=>x.t===t);return g.length?`<div class="gh">${tn(t)}</div>`+g.map(x=>`<div class="rl"><span>${x.r}</span><div class="rs"><button class="ghost" data-d="-1" data-i="${x.i}" aria-label="کم کردن ${x.r}">−</button><b>${fa(x.k)}</b><button data-d="1" data-i="${x.i}" aria-label="اضافه کردن ${x.r}">+</button></div></div>`).join(''):''}).join('');
+    const have=new Set(rows.map(x=>x.r)),pool=Object.keys(RT).filter(r=>!have.has(r));
+    const addo=['m','c','i'].map(t=>{const o=pool.filter(r=>teamOf(r)===t);return o.length?`<optgroup label="${tn(t)}">`+o.map(r=>`<option>${r}</option>`).join('')+'</optgroup>':''}).join('');
+    const nm=rows.filter(x=>x.t==='m').reduce((a,x)=>a+x.k,0);
+    const panel=`<div class="card"><h2>ترکیب نقش‌ها</h2>
+    <button id="all" class="${S.all?'on':'ghost'}">همه‌ی بازیکنان نقش ویژه داشته باشند${S.all?' ✓':''}</button>
+    ${S.all&&!S.cust&&!s.fix&&rows.some(x=>x.t==='c'&&x.k>1)?'<p style="margin:8px 0 0">تعداد بازیکنان از نقش‌های سناریو بیشتر است؛ برای همین بعضی نقش‌ها تکرار شده‌اند.</p>':''}
+    ${grp}
+    <div class="tot"><span>جمع نقش‌ها = تعداد بازیکنان</span><span>${fa(tot)}</span></div>
+    ${!s.man&&nm===0?'<p>هیچ نقش مافیایی انتخاب نشده؛ بازی بلافاصله با برد شهروندان تمام می‌شود.</p>':''}
+    <select id="addr" aria-label="افزودن نقش"><option value="">+ افزودن نقش…</option>${addo}</select>
+    ${S.cust?'<button class="ghost" id="rst">بازگشت به ترکیب پیشنهادی</button>':''}</div>`;
     const gs=[...new Set(SCL.map(x=>x.g))];
     const sel=gs.map(g=>`<optgroup label="${g}">`+SCL.map((x,i)=>x.g===g?`<option value="${i}"${i===S.sc?' selected':''}>${x.n}</option>`:'').join('')+'</optgroup>').join('');
-    let inputs='';for(let j=0;j<S.n;j++)inputs+=`<input type="text" data-n="${j}" placeholder="نام بازیکن ${fa(j+1)}" value="${esc(S.names[j]||'')}">`;
-    $.innerHTML=`<div class="hero"><img src="${LOGO}" alt="یاتوق"><h1>مافیا</h1><p>ابزار گرداننده: پخش نقش، ترتیب شب و روز، و اعلام برنده.</p></div>
+        $.innerHTML=`<div class="hero"><img src="${LOGO}" alt="یاتوق"><h1>مافیا</h1><p>ابزار گرداننده: پخش نقش، ترتیب شب و روز، و اعلام برنده.</p></div>
     <div class="card"><h2>سناریو</h2><select id="sc" aria-label="سناریو">${sel}</select>
     ${s.note?`<p>${s.note}</p>`:''}
-    <h2>تعداد بازیکنان</h2><div class="chips">${s.s.map(n=>`<button class="${n===S.n?'on':'ghost'}" data-sz="${n}">${fa(n)}</button>`).join('')}</div>
-    <div class="mix">${Object.keys(c).map(k=>`<span>${k}: ${fa(c[k])}</span>`).join('')}</div>
-    <p style="margin:8px 0 0;font-size:.85rem">ترکیب پیشنهادی است (یک‌سوم نقش‌های سیاه، به ترتیب اولویت) و گرداننده می‌تواند آن را تغییر دهد.</p></div>
-    <div class="card"><h2>نام‌ها (اختیاری)</h2><div class="names">${inputs}</div></div>
-    <button id="go">پخش نقش‌ها</button>`;
-    document.getElementById('sc').onchange=e=>{readNames();S.sc=+e.target.value;const z=cur().s;if(!z.includes(S.n))S.n=z[Math.floor(z.length/2)];render()};
-    document.querySelectorAll('[data-sz]').forEach(b=>b.onclick=()=>{readNames();S.n=+b.dataset.sz;render()});
-    document.getElementById('go').onclick=()=>{readNames();build();render()};
+    <h2>تعداد بازیکنان</h2><div class="chips">${s.s.map(n=>`<button class="${n===S.n&&!S.cust?'on':'ghost'}" data-sz="${n}">${fa(n)}</button>`).join('')}</div>
+    </div>${panel}
+    <button id="go">ادامه: آموزش بازی</button>`;
+    document.getElementById('sc').onchange=e=>{readNames();S.sc=+e.target.value;S.cust=null;const z=cur().s;if(!z.includes(S.n))S.n=z[Math.floor(z.length/2)];render()};
+    document.querySelectorAll('[data-sz]').forEach(b=>b.onclick=()=>{readNames();S.cust=null;S.n=+b.dataset.sz;render()});
+    document.getElementById('go').onclick=()=>{S.step='learn';render()};
+    const edit=f=>{readNames();const L=S.cust||(S.cust=agg(comp(S.n)));f(L);S.cust=L.filter(x=>x.k>0);S.n=S.cust.reduce((a,x)=>a+x.k,0);render()};
+    document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>edit(L=>{const x=L[+b.dataset.i],d=+b.dataset.d;if(d<0&&L.reduce((a,y)=>a+y.k,0)<=3)return;x.k+=d}));
+    document.getElementById('addr').onchange=e=>{const r=e.target.value;if(r)edit(L=>{const x=L.find(y=>y.r===r);x?x.k++:L.push({r,t:teamOf(r),k:1})})};
+    document.getElementById('all').onclick=()=>{readNames();S.all=!S.all;S.cust=null;render()};
+    const rs=document.getElementById('rst');if(rs)rs.onclick=()=>{readNames();S.cust=null;if(!s.s.includes(S.n))S.n=s.s[Math.floor(s.s.length/2)];render()};
+  }else if(S.step==='learn'){
+    const T=s.tut,rows=agg(comp(S.n));
+    const flow=T&&T.flow?`<div class="card"><h2>روند بازی</h2>${T.flow.map(f=>`<div class="step"><b>${f[0]}</b><small>${f[1]}</small></div>`).join('')}</div>`:'';
+    const grp=['m','c','i'].map(t=>{const g=rows.filter(x=>x.t===t);return g.length?`<div class="card"><h2>${tn(t)}</h2>`+g.map(x=>`<div class="step"><b>${x.r}${x.k>1?' × '+fa(x.k):''}</b><small>${roleDesc(x.r)}</small></div>`).join('')+'</div>':''}).join('');
+    $.innerHTML=`<div class="card"><h2>آموزش: ${s.n}</h2><p>${fa(S.n)} بازیکن. این توضیحات را برای همه‌ی بازیکنان بخوانید؛ بعد نقش‌ها به‌صورت تصادفی پخش می‌شود.</p>${s.note?`<p>${s.note}</p>`:''}${T?'':'<p>آموزش روند این سناریو هنوز اضافه نشده؛ فقط نقش‌ها توضیح داده می‌شوند.</p>'}</div>${flow}${grp}
+    <button id="deal">پخش تصادفی نقش‌ها</button><div class="row"><button class="ghost" id="back">بازگشت</button></div>`;
+    document.getElementById('deal').onclick=()=>{build();render()};
+    document.getElementById('back').onclick=()=>{S.step='setup';render()};
   }else if(S.step==='reveal'){
     const p=S.players[S.i];
     if(!S.shown){
@@ -234,12 +307,12 @@ function view(){
       document.getElementById('show').onclick=()=>{S.shown=true;render()};
     }else{
       const last=S.i===S.players.length-1;
-      $.innerHTML=`<div class="card big"><div class="who">${esc(p.name)}</div><div class="role t${p.team}">${p.role}</div><p>تیم: ${tn(p.team)}</p><p>${D[p.role]||DEF}</p><p>نقش را حفظ کنید و گوشی را پنهان کنید.</p><button id="hide">${last?'شروع بازی':'پنهان کردن و نفر بعدی'}</button></div>`;
+      $.innerHTML=`<div class="card big"><div class="who">${esc(p.name)}</div><div class="role t${p.team}">${p.role}</div><div class="team t${p.team}">${tn(p.team)}</div><p>${roleDesc(p.role)}</p><p>نقش را حفظ کنید و گوشی را پنهان کنید.</p><button id="hide">${last?'شروع بازی':'پنهان کردن و نفر بعدی'}</button></div>`;
       document.getElementById('hide').onclick=()=>{if(last)S.step='game';else{S.i++;S.shown=false}render()};
     }
   }else{
     const w=winner(),st=stat();
-    const rows=S.players.map((p,j)=>`<div class="pl ${p.alive?'':'dead'}"><div><span class="nm">${esc(p.name)}</span>${S.peek||!p.alive?`<span class="tag">${p.role}</span>`:''}</div><button class="ghost" data-t="${j}">${p.alive?'حذف':'برگرداندن'}</button></div>`).join('');
+    const rows=S.players.map((p,j)=>`<div class="pl ${p.alive?'':'dead'}"><div><input type="text" class="nm nmi" data-pn="${j}" placeholder="${'بازیکن '+fa(j+1)}" value="${p.name==='بازیکن '+fa(j+1)?'':esc(p.name)}" aria-label="نام بازیکن ${fa(j+1)}">${S.peek||!p.alive?`<span class="tag">${p.role}</span>`:''}</div><button class="ghost" data-t="${j}">${p.alive?'حذف':'برگرداندن'}</button></div>`).join('');
     const kiass=!w&&!s.man&&st.total===3&&st.m===1&&!st.i;
     const guide=S.night?`<div class="card"><h2>ترتیب بیدار شدن</h2>${nightGuide()}</div>`
       :`<div class="card"><h2>مراحل روز</h2><ol><li>اعلام کشته‌های شب</li><li>هر بازیکن ۱ تا ۲ دقیقه صحبت می‌کند (بدون اشاره به نقش)</li><li>رای‌گیری: هر کس به اندازه‌ی نصف منهای یک رای بگیرد به دادگاه می‌رود</li><li>دفاع متهمان و رای نهایی</li><li>وصیت بازیکن حذف‌شده</li></ol></div>`;
@@ -253,15 +326,37 @@ function view(){
     <div class="row"><button id="next">${S.night?'شروع روز':'شروع شب بعد'}</button></div>
     <div class="row"><button class="ghost" id="again">بازی جدید</button></div>`;
     document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{const p=S.players[+b.dataset.t];p.alive=!p.alive;render()});
+    document.querySelectorAll('[data-pn]').forEach(e=>e.oninput=()=>{const j=+e.dataset.pn;S.players[j].name=e.value.trim()||'بازیکن '+fa(j+1)});
     document.getElementById('peek').onclick=()=>{S.peek=!S.peek;render()};
     document.getElementById('next').onclick=()=>{if(!S.night)S.round++;S.night=!S.night;render()};
     document.getElementById('again').onclick=()=>{S.step='setup';S.peek=false;render()};
   }
 }
 function render(){
-  view();
+  view();const g=S.step==='game';document.getElementById('tm').style.display=g?'block':'none';document.body.style.paddingBottom=g?'200px':'';if(!g)tmStop();
   if(S.step!=='setup')$.insertAdjacentHTML('afterbegin',`<header class="bar"><span class="gm">سناریوی ${cur().n}</span><img src="${LOGO}" alt="یاتوق"></header>`);
 }
+const TM={m:'sp',d:{sp:60,ch:30},left:60,run:false,end:0,h:0,ac:null};
+const tmFmt=x=>{x=Math.max(0,Math.ceil(x));const m=Math.floor(x/60),r=x%60;return fa(m)+':'+(r<10?fa(0):'')+fa(r)};
+function tmDraw(){const t=document.getElementById('tt');t.textContent=tmFmt(TM.left);t.classList.toggle('lo',TM.left<=10&&(TM.run||TM.left<=0));
+  document.getElementById('tm-go').textContent=TM.run?'توقف':'شروع';
+  ['sp','ch'].forEach(k=>document.getElementById('tm-'+k).className=TM.m===k?'on':'ghost')}
+function tmStop(){clearInterval(TM.h);TM.run=false}
+function tmSet(m){tmStop();if(m)TM.m=m;TM.left=TM.d[TM.m];tmDraw()}
+function tmAdj(d){if(TM.run)return;TM.d[TM.m]=Math.max(10,TM.d[TM.m]+d);TM.left=TM.d[TM.m];tmDraw()}
+function tmBeep(){try{navigator.vibrate&&navigator.vibrate([300,150,300,150,500])}catch(e){}
+  try{const a=TM.ac;if(!a)return;[0,.35,.7].forEach(t=>{const o=a.createOscillator(),g=a.createGain();o.frequency.value=880;o.connect(g);g.connect(a.destination);g.gain.setValueAtTime(.2,a.currentTime+t);o.start(a.currentTime+t);o.stop(a.currentTime+t+.25)})}catch(e){}}
+function tmTick(){TM.left=(TM.end-Date.now())/1000;if(TM.left<=0){TM.left=0;tmStop();tmBeep()}tmDraw()}
+document.getElementById('tm-sp').onclick=()=>tmSet('sp');
+document.getElementById('tm-ch').onclick=()=>tmSet('ch');
+document.getElementById('tm-rs').onclick=()=>tmSet();
+document.getElementById('tm-m').onclick=()=>tmAdj(-10);
+document.getElementById('tm-p').onclick=()=>tmAdj(10);
+document.getElementById('tm-go').onclick=()=>{
+  if(TM.run){TM.left=(TM.end-Date.now())/1000;tmStop();tmDraw();return}
+  try{TM.ac=TM.ac||new(window.AudioContext||window.webkitAudioContext)();TM.ac.resume&&TM.ac.resume()}catch(e){}
+  if(TM.left<=0)TM.left=TM.d[TM.m];
+  TM.end=Date.now()+TM.left*1000;TM.run=true;TM.h=setInterval(tmTick,200);tmDraw()};
 render();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 </script>
